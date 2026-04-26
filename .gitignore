@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# uv
+# (uv.lock is committed)
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Project artifacts
+data/icbhi/**
+!data/icbhi/.gitkeep
+data/cache/
+checkpoints/
+runs/
+wandb/
+*.pt
+*.ckpt
+*.pth
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
