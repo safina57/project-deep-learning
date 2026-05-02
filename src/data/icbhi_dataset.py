@@ -47,11 +47,11 @@ def build_datasets(
     processor=None,
     checkpoint: str = AST_CHECKPOINT,
 ) -> tuple[ICBHIDataset, ICBHIDataset, dict]:
-    """Load a cache .pt and return (train_ds, test_ds, raw_cache_dict)."""
+    """Load a cache .pt and return (train_ds, val_ds, raw_cache_dict)."""
     cache = torch.load(Path(cache_path), weights_only=False)
     if processor is None:
         processor = load_processor(checkpoint)
     sr = int(cache.get("sample_rate", 16000))
     train_ds = ICBHIDataset(cache["x_train"], cache["y_train"], processor, sr)
-    test_ds = ICBHIDataset(cache["x_test"], cache["y_test"], processor, sr)
-    return train_ds, test_ds, cache
+    val_ds = ICBHIDataset(cache["x_val"], cache["y_val"], processor, sr)
+    return train_ds, val_ds, cache

@@ -11,7 +11,7 @@ import torch
 from tqdm.auto import tqdm
 
 from .annotations import label_4class, parse_annotation
-from .splits import Recording, load_recordings
+from .splits import Recording, load_recordings, train_val_split
 
 TARGET_SR = 16000
 TARGET_DURATION_S = 8
@@ -58,13 +58,29 @@ def build_cache(
     out_path: Path | str | None = None,
     limit: int | None = None,
     progress: bool = True,
+    val_ratio: float = 0.2,
+    val_seed: int = 42,
 ) -> dict:
     """Process recordings into per-split tensor arrays. Returns the cache dict.
 
     If out_path is given, also torch.saves the dict to that path.
     """
-    buckets = {"train": _empty_split(), "test": _empty_split()}
-    iterable: Iterable[Recording] = recordings if limit is None else recordings[:limit]
+    if limit is not None:
+        recordings = recordings[:limit]
+
+    train_recs = [r for r in recordings if r.split == "train"]
+    test_recs = [r for r in recordings if r.split == "test"]
+    train_recs, val_recs = train_val_split(train_recs, val_ratio=val_ratio, seed=val_seed)
+
+    from dataclasses import replace
+    labeled: list[Recording] = (
+        [replace(r, split="train") for r in train_recs]
+        + [replace(r, split="val") for r in val_recs]
+        + [replace(r, split="test") for r in test_recs]
+    )
+
+    buckets = {"train": _empty_split(), "val": _empty_split(), "test": _empty_split()}
+    iterable: Iterable[Recording] = labeled
     if progress:
         iterable = tqdm(list(iterable), desc="preprocess")
 
@@ -81,6 +97,8 @@ def build_cache(
         "sample_rate": TARGET_SR,
         "target_samples": TARGET_SAMPLES,
         "device_to_id": DEVICE_TO_ID,
+        "val_ratio": val_ratio,
+        "val_seed": val_seed,
     }
     for split, b in buckets.items():
         if b["x"]:
@@ -104,7 +122,7 @@ def summarize(cache: dict) -> str:
     from .annotations import CLASS_NAMES
 
     lines = []
-    for split in ("train", "test"):
+    for split in ("train", "val", "test"):
         y = cache[f"y_{split}"]
         x = cache[f"x_{split}"]
         counts = {name: int((y == k).sum()) for k, name in enumerate(CLASS_NAMES)}

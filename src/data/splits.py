@@ -75,3 +75,28 @@ def train_test(root: Path | None = None) -> tuple[list[Recording], list[Recordin
     train = [r for r in recs if r.split == "train"]
     test = [r for r in recs if r.split == "test"]
     return train, test
+
+
+def train_val_split(
+    train_recordings: list[Recording],
+    val_ratio: float = 0.2,
+    seed: int = 42,
+) -> tuple[list[Recording], list[Recording]]:
+    """Carve a patient-disjoint val set out of the official train recordings."""
+    import random
+
+    rng = random.Random(seed)
+
+    patients: dict[int, list[Recording]] = {}
+    for rec in train_recordings:
+        patients.setdefault(rec.patient_id, []).append(rec)
+
+    patient_ids = sorted(patients.keys())
+    rng.shuffle(patient_ids)
+
+    n_val = max(1, round(len(patient_ids) * val_ratio))
+    val_patients = set(patient_ids[-n_val:])
+
+    train_split = [r for r in train_recordings if r.patient_id not in val_patients]
+    val_split = [r for r in train_recordings if r.patient_id in val_patients]
+    return train_split, val_split
