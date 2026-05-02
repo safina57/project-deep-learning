@@ -90,7 +90,7 @@ def train(
         save_dir.mkdir(parents=True, exist_ok=True)
 
     history = []
-    best_se = -1.0
+    best_score = -1.0
     best_ckpt_path = None
 
     for epoch in range(1, config["epochs"] + 1):
@@ -119,7 +119,7 @@ def train(
         model.eval()
         all_preds, all_labels = [], []
         with torch.no_grad():
-            for x, y in val_loader:
+            for x, y in tqdm(val_loader, desc="val", leave=False):
                 logits = model(input_values=x.to(device)).logits
                 all_preds.append(logits.argmax(dim=1).cpu())
                 all_labels.append(y)
@@ -134,9 +134,9 @@ def train(
         print(f"[{epoch:02d}/{config['epochs']}] loss={avg_loss:.4f}  {format_metrics(m)}")
 
         # checkpoint
-        if save_dir and m["se"] > best_se:
-            best_se = m["se"]
-            best_ckpt_path = save_dir / f"best_se_epoch{epoch:02d}.pt"
+        if save_dir and m["score"] > best_score:
+            best_score = m["score"]
+            best_ckpt_path = save_dir / f"best_score_epoch{epoch:02d}.pt"
             weights = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
             torch.save({"epoch": epoch, "model": weights, "metrics": m}, best_ckpt_path)
 

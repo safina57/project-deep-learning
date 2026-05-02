@@ -2,7 +2,7 @@ lr: 1.0e-5
 wd: 1.0e-4
 rho: 0.05
 batch_size: 8
-epochs: 20
+epochs: 10
 seed: 17
 cache_path: data/cache/icbhi_16k_8s.pt
 save_dir: checkpoints/baseline
