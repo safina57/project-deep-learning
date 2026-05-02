@@ -1,0 +1,19 @@
+lr: 1.0e-5
+wd: 1.0e-4
+rho: 0.05
+batch_size: 8
+epochs: 5
+seed: 17
+cache_path: data/cache/icbhi_16k_8s.pt
+save_dir: checkpoints/specaugment
+
+# SpecAugment
+augment: true
+augment_kwargs:
+  time_mask_max: 80
+  freq_mask_max: 27
+  n_time_masks: 2
+  n_freq_masks: 2
+
+# Label smoothing (from reference paper)
+label_smoothing: 0.1

@@ -47,7 +47,9 @@ def train(
     device = torch.device(device)
     set_seed(config["seed"])
 
-    train_ds, val_ds, cache = build_datasets(cache_path)
+    augment = config.get("augment", False)
+    augment_kwargs = config.get("augment_kwargs", {})
+    train_ds, val_ds, cache = build_datasets(cache_path, augment=augment, augment_kwargs=augment_kwargs)
     sampler = make_sampler(cache["y_train"])
 
     # data
@@ -82,7 +84,8 @@ def train(
         lr=config["lr"],
         weight_decay=config["wd"],
     )
-    criterion = nn.CrossEntropyLoss()
+    label_smoothing = config.get("label_smoothing", 0.0)
+    criterion = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
 
     # training loop
     save_dir = Path(config["save_dir"]) if config.get("save_dir") else None
