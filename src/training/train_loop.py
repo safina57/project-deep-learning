@@ -20,6 +20,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from src.data.icbhi_dataset import build_datasets
 from src.eval.metrics import compute_metrics, confusion_matrix_4class, format_metrics
@@ -92,7 +93,8 @@ def train(
         model.train()
         running_loss = 0.0
 
-        for x, y in train_loader:
+        pbar = tqdm(train_loader, desc=f"epoch {epoch:02d}/{config['epochs']}", leave=False)
+        for x, y in pbar:
             x, y = x.to(device), y.to(device)
 
             # SAM pass 1: forward + backward, then perturb weights
@@ -104,6 +106,8 @@ def train(
             # SAM pass 2: forward + backward at perturbed point, then restore + update
             criterion(model(input_values=x).logits, y).backward()
             sam.second_step(zero_grad=True)
+
+            pbar.set_postfix(loss=f"{loss.item():.4f}")
 
         avg_loss = running_loss / len(train_loader)
 
