@@ -69,6 +69,10 @@ def train(
     # model
     ckpt = config.get("checkpoint", CHECKPOINT)
     model = build_model(checkpoint=ckpt).to(device)
+    n_gpus = torch.cuda.device_count() if device.type == "cuda" else 0
+    if n_gpus > 1:
+        model = nn.DataParallel(model)
+        print(f"using {n_gpus} GPUs via DataParallel")
 
     # optimizer
     sam = SAM(
@@ -133,7 +137,8 @@ def train(
         if save_dir and m["se"] > best_se:
             best_se = m["se"]
             best_ckpt_path = save_dir / f"best_se_epoch{epoch:02d}.pt"
-            torch.save({"epoch": epoch, "model": model.state_dict(), "metrics": m}, best_ckpt_path)
+            weights = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
+            torch.save({"epoch": epoch, "model": weights, "metrics": m}, best_ckpt_path)
 
     cm = confusion_matrix_4class(preds, labels)
     return {"history": history, "confusion_matrix": cm, "best_checkpoint": best_ckpt_path}
