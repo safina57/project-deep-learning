@@ -59,7 +59,7 @@ def build_cache(
     limit: int | None = None,
     progress: bool = True,
     val_ratio: float = 0.2,
-    val_seed: int = 42,
+    val_seed: int = 17,
 ) -> dict:
     """Process recordings into per-split tensor arrays. Returns the cache dict.
 

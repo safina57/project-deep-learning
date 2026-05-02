@@ -1,0 +1,8 @@
+lr: 1.0e-5
+wd: 1.0e-4
+rho: 0.05
+batch_size: 2
+epochs: 1
+seed: 17
+cache_path: data/cache/smoke.pt
+save_dir: checkpoints/smoke

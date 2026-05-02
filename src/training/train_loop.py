@@ -1,12 +1,12 @@
 """Full training loop: AST + WeightedRandomSampler + SAM + ICBHI binary eval.
 
 Config keys expected:
-    lr          float   AdamW learning rate          (baseline: 1e-5)
+    lr          float   AdamW learning rate           (baseline: 1e-5)
     wd          float   AdamW weight decay            (baseline: 1e-4)
     rho         float   SAM perturbation radius       (baseline: 0.05)
     batch_size  int     training batch size           (baseline: 8)
     epochs      int     number of training epochs     (baseline: 20)
-    seed        int     random seed                   (baseline: 42)
+    seed        int     random seed                   (baseline: 17)
     checkpoint  str     HuggingFace model ID          (optional)
     save_dir    str     directory to write .pt files  (optional)
 """

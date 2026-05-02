@@ -80,7 +80,7 @@ def train_test(root: Path | None = None) -> tuple[list[Recording], list[Recordin
 def train_val_split(
     train_recordings: list[Recording],
     val_ratio: float = 0.2,
-    seed: int = 42,
+    seed: int = 17,
 ) -> tuple[list[Recording], list[Recording]]:
     """Carve a patient-disjoint val set out of the official train recordings."""
     import random
