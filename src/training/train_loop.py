@@ -171,4 +171,59 @@ def train(
             torch.save({"epoch": epoch, "model": weights, "metrics": m}, best_ckpt_path)
 
     cm = confusion_matrix_4class(preds, labels)
-    return {"history": history, "confusion_matrix": cm, "best_checkpoint": best_ckpt_path}
+    all_ckpts = sorted(save_dir.glob("*.pt")) if save_dir else []
+    return {
+        "history": history,
+        "confusion_matrix": cm,
+        "best_checkpoint": best_ckpt_path,
+        "last_checkpoint": save_dir / "last.pt" if save_dir else None,
+        "all_checkpoints": all_ckpts,
+    }
+
+
+def evaluate_test(
+    ckpt_path: str | Path,
+    cache_path: str | Path,
+    config: dict,
+    device: torch.device | str = "cpu",
+) -> dict:
+    """Load a checkpoint and evaluate on the test split. Returns metrics dict."""
+    from torch.utils.data import DataLoader
+
+    device = torch.device(device)
+    ckpt_path = Path(ckpt_path)
+    model_type = config.get("model_type", "ast")
+
+    cache = torch.load(Path(cache_path), weights_only=False)
+
+    if model_type == "cnn14":
+        from src.data.waveform_dataset import WaveformDataset
+        from src.models.cnn14_model import build_cnn14_model
+        test_ds = WaveformDataset(cache["x_test"], cache["y_test"])
+        model = build_cnn14_model(device=str(device))
+    else:
+        from src.data.icbhi_dataset import ICBHIDataset, load_processor
+        from src.models.ast_model import build_model
+        processor = load_processor()
+        sr = int(cache.get("sample_rate", 16000))
+        test_ds = ICBHIDataset(cache["x_test"], cache["y_test"], processor, sr, augment=False)
+        model = build_model()
+
+    model.load_state_dict(torch.load(ckpt_path, map_location=device)["model"])
+    model = model.to(device)
+    model.eval()
+
+    loader = DataLoader(test_ds, batch_size=32, shuffle=False, num_workers=2)
+    all_preds, all_labels = [], []
+    with torch.no_grad():
+        for x, y in loader:
+            logits = _forward(model, x.to(device))
+            all_preds.append(logits.argmax(dim=1).cpu())
+            all_labels.append(y)
+
+    preds  = torch.cat(all_preds)
+    labels = torch.cat(all_labels)
+    m = compute_metrics(preds, labels)
+    m["checkpoint"] = ckpt_path.name
+    m["confusion_matrix"] = confusion_matrix_4class(preds, labels).tolist()
+    return m
