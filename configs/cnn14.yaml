@@ -3,7 +3,7 @@ lr: 1.0e-4
 wd: 1.0e-4
 rho: 0.05
 batch_size: 32
-epochs: 10
+epochs: 20
 seed: 17
 cache_path: data/cache/icbhi_16k_8s.pt
 save_dir: checkpoints/cnn14
