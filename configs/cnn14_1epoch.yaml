@@ -1,0 +1,10 @@
+model_type: cnn14
+lr: 1.0e-4
+wd: 1.0e-4
+rho: 0.05
+batch_size: 32
+epochs: 1
+seed: 17
+cache_path: data/cache/icbhi_16k_8s.pt
+save_dir: checkpoints/cnn14_1epoch
+label_smoothing: 0.1
