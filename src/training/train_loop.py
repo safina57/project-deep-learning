@@ -163,11 +163,14 @@ def train(
 
         print(f"[{epoch:02d}/{config['epochs']}] loss={avg_loss:.4f}  {format_metrics(m)}")
 
-        # checkpoint
+        weights = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
+
+        if save_dir:
+            torch.save({"epoch": epoch, "model": weights, "metrics": m}, save_dir / "last.pt")
+
         if save_dir and m["score"] > best_score:
             best_score = m["score"]
             best_ckpt_path = save_dir / f"best_score_epoch{epoch:02d}.pt"
-            weights = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
             torch.save({"epoch": epoch, "model": weights, "metrics": m}, best_ckpt_path)
 
     cm = confusion_matrix_4class(preds, labels)
@@ -192,6 +195,9 @@ def evaluate_test(
 
     device = torch.device(device)
     ckpt_path = Path(ckpt_path)
+    if not ckpt_path.exists():
+        return {"se": 0.0, "sp": 0.0, "score": 0.0, "checkpoint": ckpt_path.name,
+                "error": f"checkpoint not found: {ckpt_path}", "confusion_matrix": None}
     model_type = config.get("model_type", "ast")
 
     cache = torch.load(Path(cache_path), weights_only=False)
