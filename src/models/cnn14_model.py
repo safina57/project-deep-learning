@@ -45,6 +45,8 @@ def build_cnn14_model(
 
     at = AudioTagging(checkpoint_path=None, device=device)
     backbone = at.model
+    if isinstance(backbone, nn.DataParallel):
+        backbone = backbone.module
     return CNN14Classifier(backbone, num_classes=num_classes)
 
 
